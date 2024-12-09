@@ -1,16 +1,13 @@
+from langchain_chroma import Chroma
+from langchain_ollama import OllamaEmbeddings
 from langchain.tools.retriever import create_retriever_tool
 import os
 
-from utils import get_embedding_model
-
-
 def get_naive_rag_tool(vectorstore_name):
-    from langchain_chroma import Chroma
-
     # Add to vectorDB
     vectorstore = Chroma(
         collection_name=vectorstore_name,
-        embedding_function=get_embedding_model(model="quentinz/bge-large-zh-v1.5:latest"),
+        embedding_function=OllamaEmbeddings(model="quentinz/bge-large-zh-v1.5:latest"),
         persist_directory=os.path.join(os.path.dirname(os.path.dirname(__file__)), "kb", vectorstore_name, "vectorstore"),
     )
 

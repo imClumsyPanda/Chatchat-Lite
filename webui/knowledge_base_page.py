@@ -3,9 +3,8 @@ import os
 import streamlit as st
 from utils import PLATFORMS, get_embedding_models, get_kb_names
 from langchain_community.vectorstores import Chroma
+from langchain_ollama import OllamaEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-
-from utils import get_embedding_model
 
 
 def knowledge_base_page():
@@ -94,7 +93,7 @@ def knowledge_base_page():
 
             vectorstore = Chroma(
                 collection_name=selected_kb,
-                embedding_function=get_embedding_model(model="quentinz/bge-large-zh-v1.5:latest"),
+                embedding_function=OllamaEmbeddings(model="quentinz/bge-large-zh-v1.5:latest"),
                 persist_directory=vs_path,
             )
 
