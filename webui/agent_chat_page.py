@@ -48,22 +48,40 @@ def graph_response(graph, input):
         # st.write(graph.get_state_history(config={"configurable": {"thread_id": 42}},))
 
         if type(event[0]) == AIMessageChunk:
+            if len(event[0].tool_calls):
+                # st.write(event[0].tool_calls)
+                st.session_state["agent_tool_calls"].append(
+                    {
+                        "status": "正在调用工具...",
+                        "tool": event[0].tool_calls[0]["name"],
+                        "args": str(event[0].tool_calls[0]["args"]),
+                    }
+                )
             yield event[0].content
         elif type(event[0]) == ToolMessage:
             status_placeholder = st.empty()
             with status_placeholder.status("正在调用工具...", expanded=True) as s:
                 st.write("已调用 `", event[0].name, "` 工具")  # Show which tool is being called
-                # st.write("Tool input: ")
-                # st.code(event['data'].get('input'))  # Display the input data sent to the tool
+                continue_save = False
+                if len(st.session_state["agent_tool_calls"]):
+                    if  "content" not in st.session_state["agent_tool_calls"][-1].keys() \
+                            and event[0].name == st.session_state["agent_tool_calls"][-1]["tool"]:
+                        continue_save = True
+                        st.write("工具输入: ")
+                        st.code(st.session_state["agent_tool_calls"][-1]["args"], wrap_lines=True)  # Display the input data sent to the tool
                 st.write("工具输出：")
                 st.code(event[0].content, wrap_lines=True) # Placeholder for tool output that will be updated later below
                 s.update(label="已完成工具调用！", expanded=False)
-            st.session_state["agent_tool_calls"].append(
-                {
-                    "status": "已完成工具调用！",
-                    "tool": event[0].name,
-                    "content": event[0].content
-                })
+            if continue_save:
+                st.session_state["agent_tool_calls"][-1]["status"] = "已完成工具调用！"
+                st.session_state["agent_tool_calls"][-1]["content"] = event[0].content
+            else:
+                st.session_state["agent_tool_calls"].append(
+                    {
+                        "status": "已完成工具调用！",
+                        "tool": event[0].name,
+                        "content": event[0].content
+                    })
 
 
 def get_agent_chat_response(platform, model, temperature, input, selected_tools, TOOLS):
@@ -78,6 +96,9 @@ def display_chat_history():
                 for tool_call in message["tool_calls"]:
                     with st.status(tool_call["status"], expanded=False):
                         st.write("已调用 `", tool_call["tool"], "` 工具")
+                        if "args" in tool_call.keys():
+                            st.write("工具输入: ")
+                            st.code(tool_call["args"], wrap_lines=True)  # Display the input data sent to the tool
                         st.write("工具输出：")
                         st.code(tool_call["content"], wrap_lines=True)  # Placeholder for tool output that will be updated later below
 
