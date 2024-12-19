@@ -10,7 +10,7 @@ langchain==0.3.12
 langchain-text-splitters==0.3.3
 bs4==0.0.2
 streamlit-flow-component==1.5.0
-langchain-ollama==0.2.1
+langchain-ollama==0.2.2
 langchain-chroma==0.1.4
 duckduckgo-search==6.4.1
 arxiv==2.1.3
