@@ -11,7 +11,7 @@ from io import BytesIO
 import streamlit as st
 
 
-PLATFORMS = ["Ollama", "Xinference", "GLM"] # ["fastchat", "openai"]
+PLATFORMS = ["Ollama", "Xinference", "OpenAI"] # ["fastchat"] "ZhipuAI",
 
 
 def get_llm_models(platform_type: Literal[tuple(PLATFORMS)], base_url: str="", api_key: str="EMPTY"):
@@ -37,7 +37,7 @@ def get_llm_models(platform_type: Literal[tuple(PLATFORMS)], base_url: str="", a
         except Exception as e:
             st.toast(f"尝试连接 {platform_type} 获取 LLM 模型时发生错误：\n{e}")
             return []
-    elif platform_type == "GLM":
+    elif platform_type == "ZhipuAI":
         # from zhipuai import ZhipuAI
         #
         # client = ZhipuAI(
@@ -54,6 +54,17 @@ def get_llm_models(platform_type: Literal[tuple(PLATFORMS)], base_url: str="", a
             'glm-4-long',
             'glm-4-flashx',
             'glm-4-flash'
+        ]
+    elif platform_type == "OpenAI":
+        # from zhipuai import ZhipuAI
+        #
+        # client = ZhipuAI(
+        #     api_key="",  # 填写您的 APIKey
+        # )
+        # client.list_models()
+        return [
+            'gpt-4o-mini',
+            'gpt-3.5-turbo'
         ]
 
 
@@ -103,9 +114,14 @@ def get_chatllm(
             base_url = "http://127.0.0.1:9997/v1"
         if not api_key:
             api_key = "EMPTY"
-    elif platform_type == "GLM":
+    elif platform_type == "ZhipuAI":
         if not base_url:
             base_url = "https://open.bigmodel.cn/api/paas/v4"
+        if not api_key:
+            api_key = "EMPTY"
+    elif platform_type == "OpenAI":
+        if not base_url:
+            base_url = "https://api.openai.com/v1"
         if not api_key:
             api_key = "EMPTY"
 
