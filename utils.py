@@ -8,6 +8,7 @@ from streamlit_flow.state import StreamlitFlowState
 from streamlit_flow.layouts import TreeLayout
 import base64
 from io import BytesIO
+import streamlit as st
 
 
 PLATFORMS = ["Ollama", "Xinference", "GLM"] # ["fastchat", "openai"]
@@ -15,36 +16,70 @@ PLATFORMS = ["Ollama", "Xinference", "GLM"] # ["fastchat", "openai"]
 
 def get_llm_models(platform_type: Literal[tuple(PLATFORMS)], base_url: str="", api_key: str="EMPTY"):
     if platform_type == "Ollama":
-        import ollama
-        if not base_url:
-            base_url = "http://127.0.0.1:11434"
-        client = ollama.Client(host=base_url)
-        llm_models = [model["model"] for model in client.list()["models"] if "bert" not in model.details.families]
-        return llm_models
+        try:
+            import ollama
+            if not base_url:
+                base_url = "http://127.0.0.1:11434"
+            client = ollama.Client(host=base_url)
+            llm_models = [model["model"] for model in client.list()["models"] if "bert" not in model.details.families]
+            return llm_models
+        except Exception as e:
+            st.toast(f"尝试连接 {platform_type} 获取 LLM 模型时发生错误：\n{e}")
+            return []
     elif platform_type == "Xinference":
-        from xinference_client import RESTfulClient as Client
-        if not base_url:
-            base_url = "http://127.0.0.1:9997"
-        client = Client(base_url=base_url)
-        llm_models = client.list_models()
-        return {k:v for k,v in llm_models.items() if v.get("model_type") == "LLM"}
+        try:
+            from xinference_client import RESTfulClient as Client
+            if not base_url:
+                base_url = "http://127.0.0.1:9997"
+            client = Client(base_url=base_url)
+            llm_models = client.list_models()
+            return [k for k,v in llm_models.items() if v.get("model_type") == "LLM"]
+        except Exception as e:
+            st.toast(f"尝试连接 {platform_type} 获取 LLM 模型时发生错误：\n{e}")
+            return []
+    elif platform_type == "GLM":
+        # from zhipuai import ZhipuAI
+        #
+        # client = ZhipuAI(
+        #     api_key="",  # 填写您的 APIKey
+        # )
+        # client.list_models()
+        return [
+            'glm-4-alltools',
+            'glm-4-plus',
+            'glm-4-0520',
+            'glm-4',
+            'glm-4-air',
+            'glm-4-airx',
+            'glm-4-long',
+            'glm-4-flashx',
+            'glm-4-flash'
+        ]
 
 
 def get_embedding_models(platform_type: Literal[tuple(PLATFORMS)], base_url: str="", api_key: str="EMPTY"):
     if platform_type == "Ollama":
-        import ollama
-        if not base_url:
-            base_url = "http://127.0.0.1:11434"
-        client = ollama.Client(host=base_url)
-        embedding_models = [model["model"] for model in client.list()["models"] if "bert" in model.details.families]
-        return embedding_models
+        try:
+            import ollama
+            if not base_url:
+                base_url = "http://127.0.0.1:11434"
+            client = ollama.Client(host=base_url)
+            embedding_models = [model["model"] for model in client.list()["models"] if "bert" in model.details.families]
+            return embedding_models
+        except Exception as e:
+            st.toast(f"尝试连接 {platform_type} 获取 Embedding 模型时发生错误：\n{e}")
+            return []
     elif platform_type == "Xinference":
-        from xinference_client import RESTfulClient as Client
-        if not base_url:
-            base_url = "http://127.0.0.1:9997"
-        client = Client(base_url=base_url)
-        embedding_models = client.list_models()
-        return {k:v for k,v in embedding_models.items() if v.get("model_type") == "embedding"}
+        try:
+            from xinference_client import RESTfulClient as Client
+            if not base_url:
+                base_url = "http://127.0.0.1:9997"
+            client = Client(base_url=base_url)
+            embedding_models = client.list_models()
+            return [k for k,v in embedding_models.items() if v.get("model_type") == "embedding"]
+        except Exception as e:
+            st.toast(f"尝试连接 {platform_type} 获取 Embedding 模型时发生错误：\n{e}")
+            return []
 
 
 def get_chatllm(
