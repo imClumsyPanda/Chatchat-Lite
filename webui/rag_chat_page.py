@@ -47,19 +47,20 @@ def graph_response(graph, input):
                 st.session_state["rag_tool_calls"].append(
                     {
                         "status": "正在查询...",
-                        "tool": event[0].tool_calls[0]["name"],
+                        "knowledge_base": event[0].tool_calls[0]["name"].replace("_knowledge_base_tool", ""),
                         "query": str(event[0].tool_calls[0]["args"]["query"]),
                     }
                 )
             yield event[0].content
         elif type(event[0]) == ToolMessage:
             status_placeholder = st.empty()
-            with status_placeholder.status("正在查询...", expanded=True) as s:
+            with (status_placeholder.status("正在查询...", expanded=True) as s):
                 st.write("已调用 `", event[0].name.replace("_knowledge_base_tool", ""), "` 知识库进行查询")  # Show which tool is being called
                 continue_save = False
                 if len(st.session_state["rag_tool_calls"]):
                     if "content" not in st.session_state["rag_tool_calls"][-1].keys() \
-                            and event[0].name == st.session_state["rag_tool_calls"][-1]["tool"]:
+                            and event[0].name.replace("_knowledge_base_tool", "") == \
+                        st.session_state["rag_tool_calls"][-1]["knowledge_base"]:
                         continue_save = True
                         st.write("知识库检索输入: ")
                         st.code(st.session_state["rag_tool_calls"][-1]["query"],
@@ -71,13 +72,13 @@ def graph_response(graph, input):
                 s.update(label="已完成知识库检索！", expanded=False)
                 if continue_save:
                     st.session_state["rag_tool_calls"][-1]["status"] = "已完成知识库检索！"
-                    st.session_state["rag_tool_calls"][-1]["content"] = event[0].content
+                    st.session_state["rag_tool_calls"][-1]["content"] = json.loads(event[0].content)
                 else:
                     st.session_state["rag_tool_calls"].append(
                         {
                             "status": "已完成知识库检索！",
-                            "tool": event[0].name,
-                            "content": event[0].content
+                            "knowledge_base": event[0].name.replace("_knowledge_base_tool", ""),
+                            "content": json.loads(event[0].content)
                         })
 
 
