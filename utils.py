@@ -10,7 +10,7 @@ import base64
 from io import BytesIO
 
 
-PLATFORMS = ["Ollama", "Xinference"] # ["fastchat", "openai"]
+PLATFORMS = ["Ollama", "Xinference", "GLM"] # ["fastchat", "openai"]
 
 
 def get_llm_models(platform_type: Literal[tuple(PLATFORMS)], base_url: str="", api_key: str="EMPTY"):
@@ -66,6 +66,11 @@ def get_chatllm(
     elif platform_type == "Xinference":
         if not base_url:
             base_url = "http://127.0.0.1:9997/v1"
+        if not api_key:
+            api_key = "EMPTY"
+    elif platform_type == "GLM":
+        if not base_url:
+            base_url = "https://open.bigmodel.cn/api/paas/v4"
         if not api_key:
             api_key = "EMPTY"
 
