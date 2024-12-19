@@ -42,24 +42,43 @@ def graph_response(graph, input):
         # st.write(graph.get_state_history(config={"configurable": {"thread_id": 42}},))
 
         if type(event[0]) == AIMessageChunk:
+            if len(event[0].tool_calls):
+                # st.write(event[0].tool_calls)
+                st.session_state["rag_tool_calls"].append(
+                    {
+                        "status": "正在查询...",
+                        "tool": event[0].tool_calls[0]["name"],
+                        "query": str(event[0].tool_calls[0]["args"]["query"]),
+                    }
+                )
             yield event[0].content
         elif type(event[0]) == ToolMessage:
             status_placeholder = st.empty()
             with status_placeholder.status("正在查询...", expanded=True) as s:
                 st.write("已调用 `", event[0].name.replace("_knowledge_base_tool", ""), "` 知识库进行查询")  # Show which tool is being called
-                # st.write("Tool input: ")
-                # st.code(event['data'].get('input'))  # Display the input data sent to the tool
+                continue_save = False
+                if len(st.session_state["rag_tool_calls"]):
+                    if "content" not in st.session_state["rag_tool_calls"][-1].keys() \
+                            and event[0].name == st.session_state["rag_tool_calls"][-1]["tool"]:
+                        continue_save = True
+                        st.write("知识库检索输入: ")
+                        st.code(st.session_state["rag_tool_calls"][-1]["query"],
+                                wrap_lines=True)  # Display the input data sent to the tool
                 st.write("知识库检索结果：")
                 for k, content in json.loads(event[0].content).items():
                     st.write(f"- {k}:")
                     st.code(content, wrap_lines=True) # Placeholder for tool output that will be updated later below
                 s.update(label="已完成知识库检索！", expanded=False)
-                st.session_state["rag_tool_calls"].append(
-                    {
-                        "status": "已完成知识库检索！",
-                        "knowledge_base": event[0].name.replace("_knowledge_base_tool", ""),
-                        "content": json.loads(event[0].content)
-                     })
+                if continue_save:
+                    st.session_state["rag_tool_calls"][-1]["status"] = "已完成知识库检索！"
+                    st.session_state["rag_tool_calls"][-1]["content"] = event[0].content
+                else:
+                    st.session_state["rag_tool_calls"].append(
+                        {
+                            "status": "已完成知识库检索！",
+                            "tool": event[0].name,
+                            "content": event[0].content
+                        })
 
 
 def get_rag_chat_response(platform, model, temperature, input, selected_tools, KBS):
@@ -73,6 +92,9 @@ def display_chat_history():
                 for tool_call in message["tool_calls"]:
                     with st.status(tool_call["status"], expanded=False):
                         st.write("已调用 `", tool_call["knowledge_base"], "` 知识库进行查询")
+                        if "query" in tool_call.keys():
+                            st.write("知识库检索输入: ")
+                            st.code(tool_call["query"], wrap_lines=True)  # Display the input data sent to the tool
                         st.write("知识库检索结果：")
                         for k, content in tool_call["content"].items():
                             st.write(f"- {k}:")
